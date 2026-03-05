@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Developer Profile — ABC Logistics</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #0e1117;
+      --surface:   #161b25;
+      --card:      #1e2535;
+      --border:    #2a3347;
+      --accent:    #f5a623;
+      --accent2:   #3b82f6;
+      --danger:    #ef4444;
+      --text:      #e8ecf4;
+      --muted:     #7a8499;
+      --success:   #22c55e;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Sans', sans-serif;
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(245,166,35,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(245,166,35,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(14,17,23,0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 60px;
+    }
+
+    .nav-brand {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 2px;
+      color: var(--accent);
+    }
+
+    .nav-brand span { color: var(--text); }
+
+    .nav-links { display: flex; gap: 0.25rem; }
+
+    .nav-links a {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--muted);
+      padding: 0.4rem 1rem;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: rgba(245,166,35,0.06);
+    }
+
+    /* ── MAIN ── */
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    .page-header {
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 2.5rem;
+    }
+
+    .page-header h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+      letter-spacing: 3px;
+      line-height: 1;
+    }
+
+    .page-header h1 span { color: var(--accent); }
+
+    /* ── HERO CARD ── */
+    .hero-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2.5rem;
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 2.5rem;
+      align-items: center;
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+    }
+
+    @media (max-width: 600px) {
+      .hero-card { grid-template-columns: 1fr; text-align: center; }
+    }
+
+    .avatar {
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      border: 3px solid var(--accent);
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.8rem;
+      color: var(--accent);
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .avatar::after {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 50%;
+      border: 1px solid rgba(245,166,35,0.25);
+    }
+
+    .hero-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.2rem;
+      letter-spacing: 2px;
+      margin-bottom: 0.2rem;
+    }
+
+    .hero-title {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.8rem;
+    }
+
+    .hero-bio {
+      color: var(--muted);
+      font-size: 0.9rem;
+      line-height: 1.7;
+      max-width: 520px;
+    }
+
+    /* ── PANELS ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 640px) {
+      .two-col { grid-template-columns: 1fr; }
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      padding: 1rem 1.4rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .panel-title {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .panel-body { padding: 1.4rem; }
+
+    /* ── SKILL BARS ── */
+    .skill-item {
+      margin-bottom: 1rem;
+    }
+
+    .skill-item:last-child { margin-bottom: 0; }
+
+    .skill-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.4rem;
+    }
+
+    .skill-name {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text);
+    }
+
+    .skill-pct {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--accent);
+    }
+
+    .skill-bar {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .skill-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
+      border-radius: 3px;
+      width: 0;
+      transition: width 1.2s cubic-bezier(0.4,0,0.2,1);
+    }
+
+    /* ── PROJECT CARDS ── */
+    .project-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem 1.2rem;
+      margin-bottom: 0.8rem;
+      transition: border-color 0.2s;
+    }
+
+    .project-card:last-child { margin-bottom: 0; }
+    .project-card:hover { border-color: var(--accent); }
+
+    .project-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 0.3rem;
+    }
+
+    .project-desc {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .project-tag {
+      display: inline-block;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 1px;
+      padding: 0.15rem 0.5rem;
+      background: rgba(245,166,35,0.1);
+      border: 1px solid rgba(245,166,35,0.25);
+      border-radius: 3px;
+      color: var(--accent);
+      margin-top: 0.5rem;
+      margin-right: 0.3rem;
+    }
+
+    /* ── CONTACT ── */
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.8rem;
+    }
+
+    @media (max-width: 480px) {
+      .contact-grid { grid-template-columns: 1fr; }
+    }
+
+    .contact-item {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.85rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      text-decoration: none;
+      color: var(--text);
+      transition: all 0.2s;
+    }
+
+    .contact-item:hover {
+      border-color: var(--accent2);
+      transform: translateY(-1px);
+    }
+
+    .contact-icon {
+      font-size: 1.2rem;
+      width: 32px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .contact-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .contact-value {
+      font-size: 0.82rem;
+      color: var(--text);
+      margin-top: 0.1rem;
+    }
+
+    /* ── AVAILABILITY ── */
+    .avail-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 1px;
+      color: var(--success);
+      background: rgba(34,197,94,0.1);
+      border: 1px solid rgba(34,197,94,0.3);
+      border-radius: 20px;
+      padding: 0.35rem 0.9rem;
+    }
+
+    .avail-badge::before {
+      content: '';
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.3; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-brand">ABC<span> Logistics</span></div>
+    <div class="nav-links">
+      <a href="index.html">Dashboard</a>
+      <a href="about.html" class="active">Developer</a>
+    </div>
+  </nav>
+
+  <main>
+    <div class="page-header">
+      <h1>Developer <span>Profile</span></h1>
+      <p style="color:var(--muted);font-size:0.82rem;margin-top:0.4rem;font-family:'IBM Plex Mono',monospace;">The person behind the Command Center</p>
+    </div>
+
+    <!-- Hero Card -->
+    <div class="hero-card">
+      <div class="avatar">JD</div>
+      <div>
+        <div class="hero-title">Full-Stack Developer · Systems Consultant</div>
+        <!-- ✏️ EDIT YOUR NAME BELOW -->
+        <div class="hero-name">Jordan Devlin</div>
+        <div style="margin-bottom:1rem;">
+          <span class="avail-badge">Available for Projects</span>
+        </div>
+        <!-- ✏️ EDIT YOUR BIO BELOW -->
+        <p class="hero-bio">
+          I build lean, purpose-driven web systems for logistics and operations teams.
+          With 6 years of experience across supply chain tech, I specialise in
+          translating messy warehouse workflows into clean digital tools that
+          actually get used — not shelved after week two.
+        </p>
+      </div>
+    </div>
+
+    <div class="two-col">
+      <!-- Skills -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Technical Skills</span>
+        </div>
+        <div class="panel-body">
+          <!-- ✏️ EDIT SKILL NAMES & PERCENTAGES BELOW -->
+          <div class="skill-item">
+            <div class="skill-header">
+              <span class="skill-name">JavaScript / TypeScript</span>
+              <span class="skill-pct">92%</span>
+            </div>
+            <div class="skill-bar"><div class="skill-fill" data-pct="92"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-header">
+              <span class="skill-name">HTML / CSS</span>
+              <span class="skill-pct">95%</span>
+            </div>
+            <div class="skill-bar"><div class="skill-fill" data-pct="95"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-header">
+              <span class="skill-name">React / Node.js</span>
+              <span class="skill-pct">84%</span>
+            </div>
+            <div class="skill-bar"><div class="skill-fill" data-pct="84"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-header">
+              <span class="skill-name">SQL / Databases</span>
+              <span class="skill-pct">78%</span>
+            </div>
+            <div class="skill-bar"><div class="skill-fill" data-pct="78"></div></div>
+          </div>
+          <div class="skill-item">
+            <div class="skill-header">
+              <span class="skill-name">Data Visualisation</span>
+              <span class="skill-pct">88%</span>
+            </div>
+            <div class="skill-bar"><div class="skill-fill" data-pct="88"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Projects -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Recent Projects</span>
+        </div>
+        <div class="panel-body">
+          <!-- ✏️ EDIT PROJECTS BELOW -->
+          <div class="project-card">
+            <div class="project-name">ABC Logistics — Command Center</div>
+            <div class="project-desc">Real-time warehouse inventory dashboard with localStorage persistence, chart visualisations, and low-stock alerts.</div>
+            <span class="project-tag">JavaScript</span>
+            <span class="project-tag">Chart.js</span>
+            <span class="project-tag">localStorage</span>
+          </div>
+          <div class="project-card">
+            <div class="project-name">Fleet Tracker Pro</div>
+            <div class="project-desc">Live vehicle tracking dashboard for a 40-truck regional courier network, integrating GPS APIs and route analytics.</div>
+            <span class="project-tag">React</span>
+            <span class="project-tag">Leaflet.js</span>
+            <span class="project-tag">Node.js</span>
+          </div>
+          <div class="project-card">
+            <div class="project-name">Receiving Bay Portal</div>
+            <div class="project-desc">Barcode-scan intake portal for a pharmaceutical distributor, reducing check-in errors by 63%.</div>
+            <span class="project-tag">TypeScript</span>
+            <span class="project-tag">PostgreSQL</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">Get in Touch</span>
+      </div>
+      <div class="panel-body">
+        <div class="contact-grid">
+          <!-- ✏️ EDIT CONTACT DETAILS BELOW (replace href="#" with real links) -->
+          <a href="mailto:jordan@devlin.dev" class="contact-item">
+            <span class="contact-icon">✉</span>
+            <div>
+              <div class="contact-label">Email</div>
+              <!-- ✏️ REPLACE WITH YOUR EMAIL -->
+              <div class="contact-value">jordan@devlin.dev</div>
+            </div>
+          </a>
+          <a href="https://linkedin.com" target="_blank" class="contact-item">
+            <span class="contact-icon">in</span>
+            <div>
+              <div class="contact-label">LinkedIn</div>
+              <!-- ✏️ REPLACE WITH YOUR LINKEDIN URL -->
+              <div class="contact-value">linkedin.com/in/jordandevlin</div>
+            </div>
+          </a>
+          <a href="https://github.com" target="_blank" class="contact-item">
+            <span class="contact-icon">⌥</span>
+            <div>
+              <div class="contact-label">GitHub</div>
+              <!-- ✏️ REPLACE WITH YOUR GITHUB URL -->
+              <div class="contact-value">github.com/jordandevlin</div>
+            </div>
+          </a>
+          <a href="tel:+15551234567" class="contact-item">
+            <span class="contact-icon">☎</span>
+            <div>
+              <div class="contact-label">Phone</div>
+              <!-- ✏️ REPLACE WITH YOUR PHONE NUMBER -->
+              <div class="contact-value">+1 (555) 123-4567</div>
+            </div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Animate skill bars on page load
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.querySelectorAll('.skill-fill').forEach(bar => {
+          bar.style.width = bar.dataset.pct + '%';
+        });
+      }, 200);
+    });
+  </script>
+</body>
+</html>

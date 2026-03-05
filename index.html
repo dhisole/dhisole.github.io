@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ABC Logistics — Command Center</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --bg:        #0e1117;
+      --surface:   #161b25;
+      --card:      #1e2535;
+      --border:    #2a3347;
+      --accent:    #f5a623;
+      --accent2:   #3b82f6;
+      --danger:    #ef4444;
+      --text:      #e8ecf4;
+      --muted:     #7a8499;
+      --success:   #22c55e;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'IBM Plex Sans', sans-serif;
+      min-height: 100vh;
+    }
+
+    /* Grid lines background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(245,166,35,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(245,166,35,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(14,17,23,0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 60px;
+    }
+
+    .nav-brand {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      letter-spacing: 2px;
+      color: var(--accent);
+    }
+
+    .nav-brand span { color: var(--text); }
+
+    .nav-links { display: flex; gap: 0.25rem; }
+
+    .nav-links a {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--muted);
+      padding: 0.4rem 1rem;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .nav-links a:hover, .nav-links a.active {
+      color: var(--accent);
+      border-color: var(--accent);
+      background: rgba(245,166,35,0.06);
+    }
+
+    /* ── MAIN LAYOUT ── */
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    /* ── HEADER ── */
+    .page-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .page-header h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(2.2rem, 5vw, 3.5rem);
+      letter-spacing: 3px;
+      line-height: 1;
+    }
+
+    .page-header h1 span { color: var(--accent); }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.7rem;
+      letter-spacing: 1px;
+      color: var(--success);
+      text-transform: uppercase;
+    }
+
+    .status-badge::before {
+      content: '';
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.3; }
+    }
+
+    /* ── STAT CARDS ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.2rem 1.4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: var(--accent);
+    }
+
+    .stat-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      letter-spacing: 1px;
+      color: var(--text);
+    }
+
+    .stat-card.danger::after { background: var(--danger); }
+    .stat-card.danger .stat-value { color: var(--danger); }
+
+    /* ── GRID ── */
+    .content-grid {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 800px) {
+      .content-grid { grid-template-columns: 1fr; }
+    }
+
+    /* ── PANEL ── */
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.4rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .panel-title {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .panel-body { padding: 1.4rem; }
+
+    /* ── FORM ── */
+    .form-group { margin-bottom: 1rem; }
+
+    .form-group label {
+      display: block;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.4rem;
+    }
+
+    .form-group input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.65rem 0.9rem;
+      color: var(--text);
+      font-family: 'IBM Plex Sans', sans-serif;
+      font-size: 0.9rem;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    .form-group input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(245,166,35,0.1);
+    }
+
+    .form-group input::placeholder { color: var(--muted); }
+
+    .form-group input.error { border-color: var(--danger); }
+
+    .field-error {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--danger);
+      margin-top: 0.3rem;
+      display: none;
+    }
+
+    .field-error.show { display: block; }
+
+    .btn {
+      width: 100%;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 6px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 600;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0e1117;
+    }
+
+    .btn-primary:hover {
+      background: #fbb83a;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 15px rgba(245,166,35,0.3);
+    }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--danger);
+      border: 1px solid var(--danger);
+      margin-top: 0.75rem;
+    }
+
+    .btn-danger:hover {
+      background: rgba(239,68,68,0.1);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--accent2);
+      border: 1px solid var(--accent2);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(59,130,246,0.1);
+    }
+
+    /* ── INVENTORY LIST ── */
+    .inventory-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      max-height: 320px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .inventory-list:empty::after {
+      content: 'No items in inventory. Add one above.';
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-align: center;
+      padding: 2rem 0;
+      display: block;
+    }
+
+    .item-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      transition: border-color 0.2s;
+      animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateX(-10px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .item-row:hover { border-color: var(--accent); }
+    .item-row.low-stock { border-color: var(--danger); }
+
+    .item-name {
+      flex: 1;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .item-qty {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.8rem;
+      padding: 0.2rem 0.6rem;
+      background: var(--bg);
+      border-radius: 4px;
+      color: var(--accent);
+      min-width: 56px;
+      text-align: center;
+    }
+
+    .item-qty.low { color: var(--danger); }
+
+    .item-value {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--success);
+      min-width: 70px;
+      text-align: right;
+    }
+
+    .item-delete {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1rem;
+      padding: 0.2rem;
+      transition: color 0.2s;
+      line-height: 1;
+    }
+
+    .item-delete:hover { color: var(--danger); }
+
+    .low-badge {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.55rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--danger);
+      background: rgba(239,68,68,0.12);
+      border: 1px solid var(--danger);
+      border-radius: 3px;
+      padding: 0.1rem 0.35rem;
+    }
+
+    /* ── CHART PANEL ── */
+    .chart-container {
+      position: relative;
+      height: 320px;
+    }
+
+    .chart-toggle {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .chart-toggle button {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 0.3rem 0.7rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .chart-toggle button.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(245,166,35,0.08);
+    }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 999;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 1px;
+      padding: 0.75rem 1.2rem;
+      border-radius: 6px;
+      border-left: 3px solid var(--accent);
+      background: var(--card);
+      color: var(--text);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+      transform: translateY(20px);
+      opacity: 0;
+      transition: all 0.3s;
+      pointer-events: none;
+    }
+
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.error { border-color: var(--danger); }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="nav-brand">ABC<span> Logistics</span></div>
+    <div class="nav-links">
+      <a href="index.html" class="active">Dashboard</a>
+      <a href="about.html">Developer</a>
+    </div>
+  </nav>
+
+  <main>
+    <div class="page-header">
+      <div>
+        <h1>Command <span>Center</span></h1>
+        <p style="color:var(--muted);font-size:0.82rem;margin-top:0.3rem;font-family:'IBM Plex Mono',monospace;">Warehouse Inventory Management</p>
+      </div>
+      <div class="status-badge">System Online</div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">Total SKUs</div>
+        <div class="stat-value" id="stat-skus">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Units</div>
+        <div class="stat-value" id="stat-units">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Value</div>
+        <div class="stat-value" id="stat-value" style="font-size:1.5rem;">$0</div>
+      </div>
+      <div class="stat-card danger">
+        <div class="stat-label">Low Stock</div>
+        <div class="stat-value" id="stat-low">0</div>
+      </div>
+    </div>
+
+    <div class="content-grid">
+      <!-- LEFT: Form + List -->
+      <div style="display:flex;flex-direction:column;gap:1.5rem;">
+
+        <!-- Add Item Form -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Add / Update Item</span>
+          </div>
+          <div class="panel-body">
+            <div class="form-group">
+              <label>Item Name</label>
+              <input type="text" id="inp-name" placeholder="e.g. Pallet Wrap" autocomplete="off"/>
+              <div class="field-error" id="err-name"></div>
+            </div>
+            <div class="form-group">
+              <label>Quantity</label>
+              <input type="number" id="inp-qty" placeholder="e.g. 50" min="0"/>
+              <div class="field-error" id="err-qty"></div>
+            </div>
+            <div class="form-group">
+              <label>Unit Price ($)</label>
+              <input type="number" id="inp-price" placeholder="e.g. 12.99" min="0" step="0.01"/>
+              <div class="field-error" id="err-price"></div>
+            </div>
+            <button class="btn btn-primary" onclick="addItem()">+ Add to Inventory</button>
+            <button class="btn btn-danger" onclick="clearAll()">⚠ Clear All Items</button>
+          </div>
+        </div>
+
+        <!-- Inventory List -->
+        <div class="panel">
+          <div class="panel-header">
+            <span class="panel-title">Inventory List</span>
+            <span id="item-count" style="font-family:'IBM Plex Mono',monospace;font-size:0.65rem;color:var(--muted);">0 items</span>
+          </div>
+          <div class="panel-body">
+            <div class="inventory-list" id="inventory-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Chart -->
+      <div class="panel">
+        <div class="panel-header">
+          <span class="panel-title">Visualization</span>
+          <div class="chart-toggle">
+            <button id="btn-bar" class="active" onclick="setChart('bar')">Bar</button>
+            <button id="btn-pie" onclick="setChart('pie')">Pie</button>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="chart-container">
+            <canvas id="myChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="toast"></div>
+
+  <script>
+    // ── State ──
+    let items = JSON.parse(localStorage.getItem('abc_inventory') || '[]');
+    let chartMode = 'bar';
+    let chart = null;
+
+    // ── Save ──
+    function save() {
+      localStorage.setItem('abc_inventory', JSON.stringify(items));
+    }
+
+    // ── Toast ──
+    function toast(msg, type = '') {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.className = 'show ' + type;
+      clearTimeout(el._t);
+      el._t = setTimeout(() => el.className = '', 2800);
+    }
+
+    // ── Validate ──
+    function validate() {
+      let ok = true;
+      const name  = document.getElementById('inp-name').value.trim();
+      const qty   = document.getElementById('inp-qty').value.trim();
+      const price = document.getElementById('inp-price').value.trim();
+
+      // Reset
+      ['name','qty','price'].forEach(f => {
+        document.getElementById('inp-'+f).classList.remove('error');
+        document.getElementById('err-'+f).classList.remove('show');
+        document.getElementById('err-'+f).textContent = '';
+      });
+
+      if (!name) {
+        setErr('name', 'Item name is required'); ok = false;
+      }
+
+      if (qty === '') {
+        setErr('qty', 'Quantity is required'); ok = false;
+      } else if (!/^\d+(\.\d+)?$/.test(qty) || parseFloat(qty) < 0) {
+        setErr('qty', 'Must be a non-negative number'); ok = false;
+      } else if (parseFloat(qty) !== Math.floor(parseFloat(qty))) {
+        setErr('qty', 'Quantity must be a whole number'); ok = false;
+      }
+
+      if (price === '') {
+        setErr('price', 'Price is required'); ok = false;
+      } else if (!/^\d+(\.\d+)?$/.test(price) || parseFloat(price) < 0) {
+        setErr('price', 'Must be a non-negative number'); ok = false;
+      }
+
+      return ok ? { name, qty: parseInt(qty), price: parseFloat(price) } : null;
+    }
+
+    function setErr(field, msg) {
+      document.getElementById('inp-'+field).classList.add('error');
+      const el = document.getElementById('err-'+field);
+      el.textContent = msg;
+      el.classList.add('show');
+    }
+
+    // ── Add Item ──
+    function addItem() {
+      const data = validate();
+      if (!data) return;
+
+      const exists = items.find(i => i.name.toLowerCase() === data.name.toLowerCase());
+      if (exists) {
+        toast('⚠ Item already exists — update it in the list', 'error');
+        setErr('name', 'Duplicate item name');
+        return;
+      }
+
+      items.push(data);
+      save();
+      renderAll();
+      toast('✓ ' + data.name + ' added to inventory');
+
+      document.getElementById('inp-name').value = '';
+      document.getElementById('inp-qty').value = '';
+      document.getElementById('inp-price').value = '';
+    }
+
+    // ── Delete Item ──
+    function deleteItem(index) {
+      const name = items[index].name;
+      items.splice(index, 1);
+      save();
+      renderAll();
+      toast('Removed: ' + name);
+    }
+
+    // ── Clear All ──
+    function clearAll() {
+      if (!items.length) { toast('Inventory is already empty', 'error'); return; }
+      if (!confirm('Clear ALL items from inventory? This cannot be undone.')) return;
+      items = [];
+      save();
+      renderAll();
+      toast('⚠ All items cleared');
+    }
+
+    // ── Render List ──
+    function renderList() {
+      const el = document.getElementById('inventory-list');
+      el.innerHTML = '';
+      items.forEach((item, i) => {
+        const low = item.qty < 10;
+        const totalVal = (item.qty * item.price).toFixed(2);
+        const div = document.createElement('div');
+        div.className = 'item-row' + (low ? ' low-stock' : '');
+        div.innerHTML = `
+          <span class="item-name">${item.name}</span>
+          ${low ? '<span class="low-badge">Low</span>' : ''}
+          <span class="item-qty${low?' low':''}">Qty: ${item.qty}</span>
+          <span class="item-value">$${totalVal}</span>
+          <button class="item-delete" onclick="deleteItem(${i})" title="Remove">✕</button>
+        `;
+        el.appendChild(div);
+      });
+      document.getElementById('item-count').textContent = items.length + ' item' + (items.length !== 1 ? 's' : '');
+    }
+
+    // ── Render Stats ──
+    function renderStats() {
+      const skus  = items.length;
+      const units = items.reduce((s, i) => s + i.qty, 0);
+      const val   = items.reduce((s, i) => s + i.qty * i.price, 0);
+      const low   = items.filter(i => i.qty < 10).length;
+
+      document.getElementById('stat-skus').textContent  = skus;
+      document.getElementById('stat-units').textContent = units;
+      document.getElementById('stat-value').textContent = '$' + val.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+      document.getElementById('stat-low').textContent   = low;
+    }
+
+    // ── Chart ──
+    function setChart(mode) {
+      chartMode = mode;
+      document.getElementById('btn-bar').className = mode === 'bar' ? 'active' : '';
+      document.getElementById('btn-pie').className = mode === 'pie' ? 'active' : '';
+      renderChart();
+    }
+
+    function renderChart() {
+      const ctx = document.getElementById('myChart').getContext('2d');
+
+      if (chart) { chart.destroy(); chart = null; }
+
+      if (!items.length) return;
+
+      const labels = items.map(i => i.name);
+      const data   = items.map(i => i.qty);
+
+      if (chartMode === 'bar') {
+        const colors = items.map(i => i.qty < 10 ? '#ef4444' : '#f5a623');
+        const borderColors = items.map(i => i.qty < 10 ? '#ef444488' : '#f5a62388');
+
+        chart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels,
+            datasets: [{
+              label: 'Quantity',
+              data,
+              backgroundColor: colors,
+              borderColor: borderColors,
+              borderWidth: 1,
+              borderRadius: 4,
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+              legend: { display: false },
+              tooltip: {
+                backgroundColor: '#1e2535',
+                borderColor: '#2a3347',
+                borderWidth: 1,
+                titleColor: '#f5a623',
+                bodyColor: '#e8ecf4',
+                titleFont: { family: 'IBM Plex Mono' },
+                bodyFont: { family: 'IBM Plex Sans' },
+              }
+            },
+            scales: {
+              x: {
+                grid: { color: 'rgba(42,51,71,0.5)' },
+                ticks: { color: '#7a8499', font: { family: 'IBM Plex Mono', size: 11 } },
+                border: { color: '#2a3347' }
+              },
+              y: {
+                grid: { color: 'rgba(42,51,71,0.5)' },
+                ticks: { color: '#7a8499', font: { family: 'IBM Plex Mono', size: 11 } },
+                border: { color: '#2a3347' },
+                beginAtZero: true
+              }
+            }
+          }
+        });
+
+      } else {
+        const palette = [
+          '#f5a623','#3b82f6','#22c55e','#a855f7','#ec4899',
+          '#14b8a6','#f97316','#06b6d4','#84cc16','#eab308'
+        ];
+        chart = new Chart(ctx, {
+          type: 'pie',
+          data: {
+            labels,
+            datasets: [{
+              data,
+              backgroundColor: palette.slice(0, items.length),
+              borderColor: '#161b25',
+              borderWidth: 2,
+            }]
+          },
+          options: {
+            responsive: true, maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'right',
+                labels: {
+                  color: '#e8ecf4',
+                  font: { family: 'IBM Plex Sans', size: 12 },
+                  padding: 16,
+                  boxWidth: 14,
+                }
+              },
+              tooltip: {
+                backgroundColor: '#1e2535',
+                borderColor: '#2a3347',
+                borderWidth: 1,
+                titleColor: '#f5a623',
+                bodyColor: '#e8ecf4',
+                titleFont: { family: 'IBM Plex Mono' },
+                bodyFont: { family: 'IBM Plex Sans' },
+              }
+            }
+          }
+        });
+      }
+    }
+
+    // ── Render All ──
+    function renderAll() {
+      renderList();
+      renderStats();
+      renderChart();
+    }
+
+    // ── Init ──
+    renderAll();
+  </script>
+</body>
+</html>
